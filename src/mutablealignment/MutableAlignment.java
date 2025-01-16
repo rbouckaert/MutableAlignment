@@ -17,6 +17,7 @@ public class MutableAlignment extends Alignment {
 	 */
 	public void setSiteValue(int taxonNr, int siteNr, int newValue) {
 		startEditing(null);
+		editList.add(new Edit(taxonNr, siteNr, newValue));
 		sitePatterns[siteNr][taxonNr] = newValue;
 	}
 
@@ -30,13 +31,18 @@ public class MutableAlignment extends Alignment {
 	 */
 	public void setSiteValuesByTaxon(int taxonNr, int [] newValues) {
 		startEditing(null);
+		editList.add(new Edit(taxonNr, newValues));
 		for (int i = 0; i < newValues.length; i++) {
 			sitePatterns[i][taxonNr] = newValues[i];
 		}
 	}
 
-	public int [] getSiteValueByTaxon(int taxonNr) {
-		return getPattern(taxonNr);
+	public int [] getSiteValuesByTaxon(int taxonNr) {
+		int [] seq = new int[sitePatterns.length];
+		for (int i = 0; i < seq.length; i++) {
+			seq[i] = sitePatterns[i][taxonNr];
+		}
+		return seq;
 	}
 
 	
@@ -45,6 +51,7 @@ public class MutableAlignment extends Alignment {
 	 */
 	public void setSiteValuesBySite(int siteNr, int [] newValues) {
 		startEditing(null);
+		editList.add(new Edit(newValues, siteNr));
 		System.arraycopy(newValues, 0, sitePatterns[siteNr], 0, sitePatterns[siteNr].length);
 	}
 
@@ -52,6 +59,36 @@ public class MutableAlignment extends Alignment {
 		return getPattern(siteNr);
 	}
 
+
+	/**
+	 * Set all characters in the alignment 
+	 */
+	public void setSiteValues(int [][] newValues) {
+		startEditing(null);
+		editList.add(new Edit(newValues));
+		for (int i = 0; i < newValues.length; i++) {
+			System.arraycopy(newValues[i], 0, sitePatterns[i], 0, sitePatterns[i].length);
+		}
+	}
+	
+	
+	
+	/** reset site patterns to previous values **/
+	public void resetSitePatterns(int siteNr, int taxonNr, int oldValue) {
+		sitePatterns[siteNr][taxonNr] = oldValue;
+	}
+
+	public void resetSitePatterns(int siteNr, int[] oldValue) {
+		System.arraycopy(oldValue, 0, sitePatterns[siteNr], 0, sitePatterns[siteNr].length);
+	}
+
+	public void resetSitePatterns(int[][] oldValue) {
+		for (int i = 0; i < oldValue.length; i++) {
+			System.arraycopy(oldValue[i], 0, sitePatterns[i], 0, sitePatterns[i].length);
+		}
+	}
+	
+	
 	
 	/** Loggable Interface **/
 	@Override
@@ -78,54 +115,7 @@ public class MutableAlignment extends Alignment {
 
 	/** StateNode stuff **/
 	
-	enum EditType {singleSite, allTaxa, allSites}
-	
-	/** 
-	 * class for tracking edits to the alignment 
-	 * used to restore an alignment if necessary
-	 **/
-	class Edit {
-		EditType type;
-		int siteNr;
-		int taxonNr;
-		Object oldValue;
-		
-		Edit(int siteNr, int taxonNr, int oldValue) {
-			this.type = EditType.singleSite;
-			this.siteNr = siteNr;
-			this.taxonNr = taxonNr;
-			this.oldValue = oldValue;
-		}
-
-		Edit(int siteNr, int [] oldValue) {
-			this.type = EditType.allSites;
-			this.siteNr = siteNr;
-			this.oldValue = oldValue;
-		}
-
-		Edit(int [] oldValue, int taxonNr) {
-			this.type = EditType.allTaxa;
-			this.taxonNr = taxonNr;
-			this.oldValue = oldValue;
-		}
-		
-		void undo() {
-			switch(type) {
-			case singleSite:
-				sitePatterns[siteNr][taxonNr] = (int) oldValue;
-				break;
-			case allSites:;
-			int [] oldValues = (int[]) oldValue;
-			for (int i = 0; i < oldValues.length; i++) {
-				sitePatterns[i][taxonNr] = oldValues[i];
-			}
-			break;
-			case allTaxa:;
-			System.arraycopy((int[])oldValue, 0, sitePatterns[siteNr], 0, sitePatterns[siteNr].length);
-			break;
-			}
-		}
-	}
+	enum EditType {singleSite, allTaxa, allSites, all}
 	
 	protected List<Edit> editList = new ArrayList<>();
 	
@@ -137,7 +127,7 @@ public class MutableAlignment extends Alignment {
 	@Override
 	public void restore() {
 		for (int i = editList.size()-1; i>=0; i--) {
-			editList.get(i).undo();
+			editList.get(i).undo(this);
 		}
 		editList.clear();
 	}
