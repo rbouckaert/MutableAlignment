@@ -3,7 +3,9 @@ package mutablealignment;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import beast.base.core.Description;
 import beast.base.core.Log;
@@ -208,5 +210,24 @@ public class MutableAlignment extends Alignment {
 				Log.info.println(" removed " + removedSites + " sites ");
 		}
 	} // calcPatterns
+
+	public Integer [] getDirtySequenceIndices() {
+		Set<Integer> dirtySequences = new HashSet<>();
+		for (Edit edit : editList) {
+			switch (edit.type) {
+			case all:
+			case allTaxa:
+				for (int i = 0; i < getTaxonCount(); i++) {
+					dirtySequences.add(i);
+				}
+				break;
+			case allSites:
+			case singleSite:
+				dirtySequences.add(edit.taxonNr);
+				break;
+			}
+		}
+		return dirtySequences.toArray(new Integer[] {});
+	}
 
 }
