@@ -25,7 +25,7 @@ public class MutableAlignmentTest {
 		MutableAlignment d = getAlignment4();
 		assertAlignmentsAreEqual(a, d);
 
-		a.setSiteValues(new int[][]{{2,1,2,1,2,1},{1,2,1,2,1,2},{0,1,2,3,2,1}});
+		a.setSiteValues(new int[][]{{2,1,2,1,2,1},{1,2,1,2,1,2},{2,1,2,1,2,1}});
 		MutableAlignment e = getAlignment5();
 		assertAlignmentsAreEqual(a, e);
 	}
@@ -66,10 +66,10 @@ public class MutableAlignmentTest {
     }
 
     static public MutableAlignment getAlignment5() throws Exception {
-        Sequence human = new Sequence("human",         "GCA");
+        Sequence human = new Sequence("human",         "GCG");
         Sequence chimp = new Sequence("chimp",         "CGC");
         Sequence bonobo = new Sequence("bonobo",       "GCG");
-        Sequence gorilla = new Sequence("gorilla",     "CGT");
+        Sequence gorilla = new Sequence("gorilla",     "CGC");
         Sequence orangutan = new Sequence("orangutan", "GCG");
         Sequence siamang = new Sequence("siamang",     "CGC");
         return getAlignment(human, chimp, bonobo, gorilla, orangutan, siamang);

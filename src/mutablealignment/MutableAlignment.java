@@ -19,7 +19,7 @@ public class MutableAlignment extends Alignment {
 	 */
 	public void setSiteValue(int taxonNr, int siteNr, int newValue) {
 		startEditing(null);
-		editList.add(new Edit(taxonNr, siteNr, newValue));
+		editList.add(new Edit(taxonNr, siteNr, sitePatterns[siteNr][taxonNr], newValue));
 		sitePatterns[siteNr][taxonNr] = newValue;
 	}
 
@@ -33,7 +33,11 @@ public class MutableAlignment extends Alignment {
 	 */
 	public void setSiteValuesByTaxon(int taxonNr, int [] newValues) {
 		startEditing(null);
-		editList.add(new Edit(taxonNr, newValues));
+		int [] oldValues = new int[newValues.length];
+		for (int i = 0; i < newValues.length; i++) {
+			oldValues[i] = sitePatterns[i][taxonNr]; 
+		}
+		editList.add(new Edit(oldValues, taxonNr, newValues));
 		for (int i = 0; i < newValues.length; i++) {
 			sitePatterns[i][taxonNr] = newValues[i];
 		}
@@ -53,7 +57,7 @@ public class MutableAlignment extends Alignment {
 	 */
 	public void setSiteValuesBySite(int siteNr, int [] newValues) {
 		startEditing(null);
-		editList.add(new Edit(newValues, siteNr));
+		editList.add(new Edit(siteNr, sitePatterns[siteNr].clone(), newValues));
 		System.arraycopy(newValues, 0, sitePatterns[siteNr], 0, sitePatterns[siteNr].length);
 	}
 
@@ -67,7 +71,12 @@ public class MutableAlignment extends Alignment {
 	 */
 	public void setSiteValues(int [][] newValues) {
 		startEditing(null);
-		editList.add(new Edit(newValues));
+		int n = newValues[0].length;
+		int [][] oldValues = new int[newValues.length][n];
+		for (int i = 0; i < oldValues.length; i++) {
+			System.arraycopy(sitePatterns[i], 0, oldValues[i], 0, n);
+		}
+		editList.add(new Edit(oldValues, newValues));
 		for (int i = 0; i < newValues.length; i++) {
 			System.arraycopy(newValues[i], 0, sitePatterns[i], 0, sitePatterns[i].length);
 		}
@@ -80,13 +89,13 @@ public class MutableAlignment extends Alignment {
 		sitePatterns[siteNr][taxonNr] = oldValue;
 	}
 
-	public void resetSitePatterns(int siteNr, int[] oldValue) {
-		System.arraycopy(oldValue, 0, sitePatterns[siteNr], 0, sitePatterns[siteNr].length);
+	public void resetSitePatterns(int siteNr, int[] oldValues) {
+		System.arraycopy(oldValues, 0, sitePatterns[siteNr], 0, sitePatterns[siteNr].length);
 	}
 
-	public void resetSitePatterns(int[][] oldValue) {
-		for (int i = 0; i < oldValue.length; i++) {
-			System.arraycopy(oldValue[i], 0, sitePatterns[i], 0, sitePatterns[i].length);
+	public void resetSitePatterns(int[][] oldValues) {
+		for (int i = 0; i < oldValues.length; i++) {
+			System.arraycopy(oldValues[i], 0, sitePatterns[i], 0, sitePatterns[i].length);
 		}
 	}
 	
@@ -216,12 +225,12 @@ public class MutableAlignment extends Alignment {
 		for (Edit edit : editList) {
 			switch (edit.type) {
 			case all:
-			case allTaxa:
+			case allSites:
 				for (int i = 0; i < getTaxonCount(); i++) {
 					dirtySequences.add(i);
 				}
 				break;
-			case allSites:
+			case allTaxa:
 			case singleSite:
 				dirtySequences.add(edit.taxonNr);
 				break;

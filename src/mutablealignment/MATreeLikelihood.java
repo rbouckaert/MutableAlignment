@@ -49,9 +49,9 @@ public class MATreeLikelihood extends TreeLikelihood {
         	dirtySequences.add(i);
         }
         updateTipData();
-        
 	}
-    private void updateTipData() {
+
+	private void updateTipData() {
         TreeInterface tree = treeInput.get();
     	int patternCount = alignment.getPatternCount();
         int stateCount = alignment.getDataType().getStateCount();

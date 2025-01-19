@@ -11,29 +11,38 @@ class Edit {
 	int siteNr;
 	int taxonNr;
 	Object oldValue;
+	Object newValue;
 	
-	Edit(int siteNr, int taxonNr, int oldValue) {
+	Edit(int siteNr, int taxonNr, int oldValue, int newValue) {
 		this.type = EditType.singleSite;
 		this.siteNr = siteNr;
 		this.taxonNr = taxonNr;
 		this.oldValue = oldValue;
+		this.newValue = newValue;
 	}
 
-	Edit(int siteNr, int [] oldValue) {
+	Edit(int siteNr, int [] oldValue, int [] newValue) {
 		this.type = EditType.allSites;
 		this.siteNr = siteNr;
+		this.taxonNr = -1;
 		this.oldValue = oldValue;
+		this.newValue = newValue;
 	}
 
-	Edit(int [] oldValue, int taxonNr) {
+	Edit(int [] oldValue, int taxonNr, int [] newValue) {
 		this.type = EditType.allTaxa;
+		this.siteNr = -1;
 		this.taxonNr = taxonNr;
 		this.oldValue = oldValue;
+		this.newValue = newValue;
 	}
 	
-	Edit(int [][] oldValue) {
+	Edit(int [][] oldValue, int [][] newValue) {
 		this.type = EditType.all;
+		this.siteNr = -1;
+		this.taxonNr = -1;
 		this.oldValue = oldValue;
+		this.newValue = newValue;
 	}
 
 	void undo(MutableAlignment mutableAlignment) {
@@ -42,13 +51,13 @@ class Edit {
 			mutableAlignment.resetSitePatterns(siteNr, taxonNr, (int) oldValue);
 			break;
 		case allSites:;
+			mutableAlignment.resetSitePatterns(siteNr, (int[])oldValue);
+			break;
+		case allTaxa:;
 			int [] oldValues = (int[]) oldValue;
 			for (int i = 0; i < oldValues.length; i++) {
 				mutableAlignment.resetSitePatterns(i, taxonNr, oldValues[i]);
 			}
-			break;
-		case allTaxa:;
-			mutableAlignment.resetSitePatterns(siteNr, (int[])oldValue);
 			break;
 		case all:;
 			mutableAlignment.resetSitePatterns((int[][])oldValue);

@@ -116,6 +116,7 @@
                 <include name="**/*.class"/>
                 <include name="**/*.class"/>
                 <include name="**/*.css"/>
+                <exclude name="test/**"/>
             </fileset>
         </jar>
     </target>
