@@ -19,7 +19,7 @@ public class MutableAlignment extends Alignment {
 	 */
 	public void setSiteValue(int taxonNr, int siteNr, int newValue) {
 		startEditing(null);
-		editList.add(new Edit(taxonNr, siteNr, sitePatterns[siteNr][taxonNr], newValue));
+		editList.add(new Edit(siteNr, taxonNr, sitePatterns[siteNr][taxonNr], newValue));
 		sitePatterns[siteNr][taxonNr] = newValue;
 	}
 
