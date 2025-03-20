@@ -32,12 +32,19 @@ public class MATreeLikelihood extends TreeLikelihood {
 	}
 	
 	@Override
+	protected void calcLogP() {
+		// TODO Auto-generated method stub
+		super.calcLogP();
+	}
+	
+	@Override
 	public double calculateLogP() {
 		if (alignmentNeedsUpdate) {
 			updateAlignment();
 			alignmentNeedsUpdate = false;
 		}
-		return super.calculateLogP();
+		logP = super.calculateLogP();
+		return logP;
 	}
 	
 	
@@ -60,7 +67,6 @@ public class MATreeLikelihood extends TreeLikelihood {
             int taxonIndex = alignment.getTaxonIndex(node.getID());
 
             if (m_useAmbiguities.get()) {
-	            likelihoodCore.setNodePartialsForUpdate(nodeNr);
 	            double[] partials = new double[patternCount * stateCount];
 	            
 	            int k = 0;
@@ -71,7 +77,8 @@ public class MATreeLikelihood extends TreeLikelihood {
 	                		partials[k++] = tipLikelihoods[state];
 	                	}
 	                } else {
-		                boolean[] stateSet = alignment.getStateSet(stateCount);
+	                	int statex = alignment.getPattern(taxonIndex, patternIndex_);
+		                boolean[] stateSet = alignment.getStateSet(statex);
 		                for (int state = 0; state < stateCount; state++) {
 		                	 partials[k++] = (stateSet[state] ? 1.0 : 0.0);                
 		                }
@@ -98,16 +105,19 @@ public class MATreeLikelihood extends TreeLikelihood {
     }
 
 	
-	
+	@Override
+	public void store() {
+    	dirtySequences.clear();
+
+    	super.store();
+	}
 	
 	@Override
 	public void restore() {
 		super.restore();
 		
-        if (!m_useAmbiguities.get()) {
-        	updateTipData();
-        	dirtySequences.clear();
-        }
+    	updateTipData();
+    	dirtySequences.clear();
 	}
 	
 

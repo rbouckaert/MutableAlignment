@@ -145,6 +145,8 @@ public class MutableAlignment extends Alignment implements MutableAlignmentInter
 	@Override
 	protected void store() {
 		editList.clear();
+		hasStartedEditing = false;
+		super.store();
 	}
 	
 	@Override
@@ -154,6 +156,7 @@ public class MutableAlignment extends Alignment implements MutableAlignmentInter
 			editList.get(i).undo(this);
 		}
 		editList.clear();
+		super.restore();
 	}
 
 	/**
@@ -252,6 +255,20 @@ public class MutableAlignment extends Alignment implements MutableAlignmentInter
 		return dirtySequences.toArray(new Integer[] {});
 	}
 
-
+	@Override
+	public String toString() {
+		int siteCount = getSiteCount();
+		int taxonCount = getTaxonCount();
+		
+		StringBuilder b = new StringBuilder();
+		for (int i = 0; i < taxonCount; i++) {
+			b.append(getTaxaNames().get(i) + ": ");
+			for (int j = 0; j < siteCount; j++) {
+				b.append(getDataType().getCharacter(getPattern(i, j)));
+			}
+			b.append("\n");
+		}
+		return b.toString();
+	}
 
 }

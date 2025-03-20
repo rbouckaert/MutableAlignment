@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><beast beautitemplate='Standard' beautistatus='' namespace="beast.core:beast.evolution.alignment:beast.evolution.tree.coalescent:beast.core.util:beast.evolution.nuc:beast.evolution.operators:beast.evolution.sitemodel:beast.evolution.substitutionmodel:beast.base.evolution.alignment:beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.evolution.tree.coalescent:beast.pkgmgmt:beast.base.core:beast.base.inference.util:beast.evolution.nuc:beast.base.evolution.operator:beast.base.inference.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood" required="BEAST.base v2.7.7" version="2.7">
+
+    <data id="dna" spec="mutablealignment.MutableAlignment">
+        <sequence id="seq_Cow" spec="Sequence" taxon="Cow" totalcount="4"         value="AAAAA"/>
+        <sequence id="seq_Carp" spec="Sequence" taxon="Carp" totalcount="4"       value="GGGGG"/>
+        <sequence id="seq_Chicken" spec="Sequence" taxon="Chicken" totalcount="4" value="CCCCC"/>
+    </data>
+
+    <run id="mcmc" spec="MCMC" chainLength="10000000">
+        <state id="state" spec="State" storeEvery="5000">
+        	<stateNode idref="Tree"/>
+        	<stateNode idref="dna"/>
+        </state>
+        
+        <init id="NewickTree" spec="beast.base.evolution.tree.TreeParser" IsLabelledNewick="true" estimate="false" initial="@Tree" newick="((Cow:0.1,Carp:0.1):0.1,Chicken:0.2)" taxa="@dna"/>
+        
+        <distribution id="posterior" spec="CompoundDistribution">
+            <distribution id="treeLikelihood.dna" spec="mutablealignment.MATreeLikelihood" data="@dna">
+            	<tree id="Tree" spec="beast.base.evolution.tree.Tree">
+                	<taxonset id="TaxonSet.dna" spec="TaxonSet" alignment="@dna"/>
+    	        </tree>
+                <siteModel id="SiteModel" spec="SiteModel" mutationRate="1.0" shape="1.0" proportionInvariant="0.0">
+                    <substModel id="hky" spec="HKY" kappa="2.0">
+                        <frequencies id="equalFreqs" spec="Frequencies" estimate="false" frequencies="0.25 0.25 0.25 0.25"/>
+                    </substModel>
+                </siteModel>
+            </distribution>
+        </distribution>
+        
+        <operator spec="mutablealignment.MutableAlignmentOperator" mutableAlignment="@dna" weight="1.0"/>
+        
+        <logger id="tracelog" spec="Logger" fileName="$(filebase).log" logEvery="1" model="@posterior" sanitiseHeaders="true" sort="smart">
+            <log idref="posterior"/>
+            <log idref="treeLikelihood.dna"/>
+            <log spec="mutablealignment.MutableAlignmentLogger" alignment="@dna"/>
+        </logger>
+        
+        <logger id="screenlog" spec="Logger" logEvery="1000">
+            <log idref="posterior"/>
+        </logger>
+    </run>
+
+</beast>

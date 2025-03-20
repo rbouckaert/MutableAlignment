@@ -22,7 +22,7 @@ class Edit {
 	}
 
 	Edit(int siteNr, int [] oldValue, int [] newValue) {
-		this.type = EditType.allSites;
+		this.type = EditType.allTaxa;
 		this.siteNr = siteNr;
 		this.taxonNr = -1;
 		this.oldValue = oldValue;
@@ -30,7 +30,7 @@ class Edit {
 	}
 
 	Edit(int [] oldValue, int taxonNr, int [] newValue) {
-		this.type = EditType.allTaxa;
+		this.type = EditType.allSites;
 		this.siteNr = -1;
 		this.taxonNr = taxonNr;
 		this.oldValue = oldValue;
@@ -50,16 +50,16 @@ class Edit {
 		case singleSite:
 			mutableAlignment.resetSitePatterns(siteNr, taxonNr, (int) oldValue);
 			break;
-		case allSites:;
+		case allTaxa:
 			mutableAlignment.resetSitePatterns(siteNr, (int[])oldValue);
 			break;
-		case allTaxa:;
+		case allSites:
 			int [] oldValues = (int[]) oldValue;
 			for (int i = 0; i < oldValues.length; i++) {
 				mutableAlignment.resetSitePatterns(i, taxonNr, oldValues[i]);
 			}
 			break;
-		case all:;
+		case all:
 			mutableAlignment.resetSitePatterns((int[][])oldValue);
 			break;
 		}
