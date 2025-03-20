@@ -1,5 +1,6 @@
 package mutablealignment;
 
+
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,11 +9,22 @@ import java.util.List;
 import java.util.Set;
 
 import beast.base.core.Description;
+import beast.base.core.Input;
 import beast.base.core.Log;
 import beast.base.evolution.alignment.Alignment;
 
 @Description("Alignment that can be sampled by MCMC")
-public class MutableAlignment extends Alignment {
+public class MutableAlignment extends Alignment implements MutableAlignmentInterface {
+	
+	public MutableAlignment() {
+	}
+	
+	public MutableAlignment(Alignment other) {
+		for (Input<?> input : other.listInputs()) {
+			setInputValue(input.getName(), input.get());
+		}
+		initAndValidate();
+	}
 	
 	/**
 	 * Set 1 character in the alignment at a specific taxon and site
@@ -137,12 +149,13 @@ public class MutableAlignment extends Alignment {
 	
 	@Override
 	public void restore() {
+		
 		for (int i = editList.size()-1; i>=0; i--) {
 			editList.get(i).undo(this);
 		}
 		editList.clear();
 	}
-	
+
 	/**
 	 * calculate patterns from sequence data *
 	 */
@@ -225,12 +238,12 @@ public class MutableAlignment extends Alignment {
 		for (Edit edit : editList) {
 			switch (edit.type) {
 			case all:
-			case allSites:
+			case allTaxa:
 				for (int i = 0; i < getTaxonCount(); i++) {
 					dirtySequences.add(i);
 				}
 				break;
-			case allTaxa:
+			case allSites:
 			case singleSite:
 				dirtySequences.add(edit.taxonNr);
 				break;
@@ -238,5 +251,7 @@ public class MutableAlignment extends Alignment {
 		}
 		return dirtySequences.toArray(new Integer[] {});
 	}
+
+
 
 }
