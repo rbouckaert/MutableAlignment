@@ -17,7 +17,11 @@
         <distribution id="posterior" spec="CompoundDistribution">
             <distribution id="treeLikelihood.dna" spec="mutablealignment.MATreeLikelihood" data="@dna">
             	<tree id="Tree" spec="beast.base.evolution.tree.Tree">
-                	<taxonset id="TaxonSet.dna" spec="TaxonSet" alignment="@dna"/>
+                	<taxonset id="TaxonSet.dna" spec="TaxonSet">
+                        <taxon spec="Taxon" id="Cow"/>
+                        <taxon spec="Taxon" id="Carp"/>
+                        <taxon spec="Taxon" id="Chicken"/>
+                    </taxonset>
     	        </tree>
                 <siteModel id="SiteModel" spec="SiteModel" mutationRate="1.0" shape="1.0" proportionInvariant="0.0">
                     <substModel id="hky" spec="HKY" kappa="2.0">

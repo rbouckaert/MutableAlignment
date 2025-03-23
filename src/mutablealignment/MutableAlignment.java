@@ -1,6 +1,7 @@
 package mutablealignment;
 
 
+
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,10 +9,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.w3c.dom.Node;
+
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Log;
 import beast.base.evolution.alignment.Alignment;
+import beast.base.evolution.datatype.DataType;
+import beast.base.inference.StateNode;
 
 @Description("Alignment that can be sampled by MCMC")
 public class MutableAlignment extends Alignment implements MutableAlignmentInterface {
@@ -256,6 +261,10 @@ public class MutableAlignment extends Alignment implements MutableAlignmentInter
 	}
 
 	@Override
+	/* 
+	 * be aware the toString() is used to restore from the state,
+	 * so if you change this, then fromXML() needs to be updated as well
+	 */
 	public String toString() {
 		int siteCount = getSiteCount();
 		int taxonCount = getTaxonCount();
@@ -271,4 +280,57 @@ public class MutableAlignment extends Alignment implements MutableAlignmentInter
 		return b.toString();
 	}
 
+	@Override
+	public String toXML() {
+        return "<statenode id='" + normalise(getID()) + "'>" +
+                normalise(toString()) +
+                "</statenode>\n";
+    }
+
+    /** ensure XML identifiers get proper escape sequences **/
+    private String normalise(String str) {
+    	if (str == null) {
+    		return null;
+    	}
+    	str = str.replaceAll("&", "&amp;");    	
+    	str = str.replaceAll("'", "&apos;");
+    	str = str.replaceAll("\"", "&quot;");
+    	str = str.replaceAll("<", "&lt;");
+    	str = str.replaceAll(">", "&gt;");
+    	return str;
+    }
+
+	@Override
+	public void fromXML(Node node) {
+		String str = node.getTextContent();
+		String [] strs = str.split("\n");
+		for (String s : strs) {
+			String []strs2 = s.split(":");
+			String taxon = strs2[0];
+			String sequences = strs2[1].strip();
+			DataType dataType = getDataType();
+			int [] seq = dataType.stringToEncoding(sequences).stream().mapToInt(i->i).toArray();
+			int taxonNr = getTaxonIndex(taxon);
+			for (int siteNr = 0; siteNr < seq.length; siteNr++) {
+				sitePatterns[siteNr][taxonNr] = seq[siteNr];
+			}
+		}
+	}
+
+	@Override
+	public StateNode copy() {
+		return new MutableAlignment(this);
+	}
+	
+	@Override
+	public void assignFromFragile(StateNode other) {
+		MutableAlignment src = (MutableAlignment)other;
+		if (src.getPatternCount() != src.getPatternCount()) {
+			throw new IllegalArgumentException("assignFromFragile() Expected replacement to be of equal number of patterns (this is realy fragile)");
+		}
+		for (int i = 0; i < src.getPatternCount(); i++) {
+			resetSitePatterns(i, src.getPattern(i));			
+		}
+	}
+	
 }
