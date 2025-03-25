@@ -9,10 +9,9 @@ import beast.base.util.Randomizer;
 public class MutableAlignmentOperator extends Operator {
     public Input<MutableAlignment> mutableAlignmentInput = new Input<>("mutableAlignment", "mutableAlignment");
     private MutableAlignment mutableAlignment;
-    private Integer site;
-    private Integer taxa;
-    private Integer oldState;
-    private Integer newState;
+    private int numStates;
+    private int numSites;
+    private int numTaxa;
 
     public MutableAlignmentOperator() {}
 
@@ -20,24 +19,24 @@ public class MutableAlignmentOperator extends Operator {
     @Override
     public void initAndValidate() {
         mutableAlignment = mutableAlignmentInput.get();
+        numStates = mutableAlignment.getDataType().getStateCount();
+        numSites = mutableAlignment.getSiteCount();
+        numTaxa = mutableAlignment.getTaxonCount();
     }
 
 
     @Override
     public double proposal() {
-        taxa = Randomizer.nextInt(mutableAlignment.getTaxonCount());
-        site = Randomizer.nextInt(mutableAlignment.getSiteCount());
-        oldState = mutableAlignment.getSiteValue(taxa, site);
+        int taxa = Randomizer.nextInt(numTaxa);
+        int site = Randomizer.nextInt(numSites);
+        int oldState = mutableAlignment.getSiteValue(taxa, site);
+        int newState;
         do {
-            int numStates = mutableAlignment.getDataType().getStateCount();
             newState = Randomizer.nextInt(numStates);
-        } while (newState.equals(oldState));
+        } while (newState==oldState);
         mutableAlignment.setSiteValue(taxa, site, newState);
         return 0;
     }
-
-
-
 
 
 }
