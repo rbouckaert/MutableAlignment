@@ -104,6 +104,75 @@ public class MATreeLikelihood extends TreeLikelihood {
         }
     }
 
+	/*
+	 * returns pattern log likelihoods after setting sequence for node with given nodeNr 
+	 * to states encoded in sites
+	 */
+	public double [] getLogProbsForStateSequence(int nodeNr, int [] sites) {
+		// update data for node 
+		int patternCount = sites.length;
+        if (m_useAmbiguities.get()) {
+        	throw new IllegalArgumentException("should not use getLogProbsForSequence but getLogProbsForPartialsSequence instead");
+        }
+        int[] states = new int[patternCount];
+        DataType dataType = alignment.getDataType();
+        for (int i = 0; i < patternCount; i++) {
+            int code = states[i];
+            int[] statesForCode = dataType.getStatesForCode(code);
+            if (statesForCode.length==1)
+                states[i] = statesForCode[0];
+            else
+                states[i] = code; // Causes ambiguous states to be ignored.
+        }
+        likelihoodCore.setNodeStates(nodeNr, states);
+
+        return calcPatternLogLikelihoods(nodeNr);
+	}
+
+	/*
+	 * returns pattern log likelihoods after setting sequence for node with given nodeNr 
+	 * to states encoded in sites
+	 */
+	public double [] getLogProbsForPartialsSequence(int nodeNr, double [] tipLikelihoods) {
+        likelihoodCore.setNodePartials(nodeNr, tipLikelihoods);
+
+        return calcPatternLogLikelihoods(nodeNr);
+	}
+
+	
+	// propagate changes from a leaf node set by getLogProbsForStateSequence or 
+	// getLogProbsForPartialsSequence to the root and return updated pattern log 
+	// likelihoods
+	private double [] calcPatternLogLikelihoods(int nodeNr) {
+        // calculate partials up to the root
+        Node node = treeInput.get().getNode(nodeNr);
+        do {
+        	node = node.getParent();
+            likelihoodCore.calculatePartials(node.getLeft().getNr(), node.getRight().getNr(), node.getNr());
+        } while (!node.isRoot());
+        
+        // do fiddly bits at the root
+        final double[] proportions = m_siteModel.getCategoryProportions(node);
+        likelihoodCore.integratePartials(node.getNr(), proportions, m_fRootPartials);
+
+        if (getConstantPattern() != null) { // && !SiteModel.g_bUseOriginal) {
+            proportionInvariant = m_siteModel.getProportionInvariant();
+            // some portion of sites is invariant, so adjust root partials for this
+            for (final int i : getConstantPattern()) {
+                m_fRootPartials[i] += proportionInvariant;
+            }
+        }
+
+        // combine with root frequencies
+        double[] rootFrequencies = substitutionModel.getFrequencies();
+        if (rootFrequenciesInput.get() != null) {
+            rootFrequencies = rootFrequenciesInput.get().getFreqs();
+        }
+        likelihoodCore.calculateLogLikelihoods(m_fRootPartials, rootFrequencies, patternLogLikelihoods);
+
+		return getPatternLogLikelihoods();
+	}
+	
 	
 	@Override
 	public void store() {
