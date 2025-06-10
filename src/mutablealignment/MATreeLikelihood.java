@@ -120,7 +120,7 @@ public class MATreeLikelihood extends TreeLikelihood {
         int[] states = new int[patternCount];
         DataType dataType = alignment.getDataType();
         for (int i = 0; i < patternCount; i++) {
-            int code = states[i];
+            int code = sites[i];
             int[] statesForCode = dataType.getStatesForCode(code);
             if (statesForCode.length==1)
                 states[i] = statesForCode[0];

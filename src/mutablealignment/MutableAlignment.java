@@ -5,6 +5,7 @@ package mutablealignment;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -30,6 +31,17 @@ public class MutableAlignment extends Alignment implements MutableAlignmentInter
 			setInputValue(input.getName(), input.get());
 		}
 		initAndValidate();
+	}
+	
+	
+	@Override
+	public void initAndValidate() {
+		// sort sequences alphabetically
+		Collections.sort(sequenceInput.get(), (o1,o2) -> {
+			return o1.taxonInput.get().compareTo(o2.taxonInput.get());
+		});
+		
+		super.initAndValidate();
 	}
 	
 	/**
@@ -347,5 +359,5 @@ public class MutableAlignment extends Alignment implements MutableAlignmentInter
 			resetSitePatterns(i, src.getPattern(i));			
 		}
 	}
-	
+
 }
