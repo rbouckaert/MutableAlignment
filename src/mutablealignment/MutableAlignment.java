@@ -16,6 +16,7 @@ import beast.base.core.Input;
 import beast.base.core.Log;
 import beast.base.evolution.alignment.Alignment;
 import beast.base.evolution.datatype.DataType;
+import beast.base.inference.Operator;
 import beast.base.inference.StateNode;
 
 @Description("Alignment that can be sampled by MCMC")
@@ -68,6 +69,11 @@ public class MutableAlignment extends Alignment implements MutableAlignmentInter
 		return seq;
 	}
 
+	@Override
+	public void startEditing(Operator operator) {
+		super.startEditing(operator);
+		setSomethingIsDirty(true);
+	}
 	
 	/**
 	 * Set characters in the alignment at a specific site for all taxa
@@ -153,6 +159,14 @@ public class MutableAlignment extends Alignment implements MutableAlignmentInter
 		hasStartedEditing = false;
 		super.store();
 	}
+
+	
+	@Override
+	protected void accept() {
+		hasStartedEditing = false;
+		editList.clear();
+		super.accept();
+	}
 	
 	@Override
 	public void restore() {
@@ -161,6 +175,7 @@ public class MutableAlignment extends Alignment implements MutableAlignmentInter
 			editList.get(i).undo(this);
 		}
 		editList.clear();
+		hasStartedEditing = false;
 		super.restore();
 	}
 

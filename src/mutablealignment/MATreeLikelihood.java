@@ -1,6 +1,7 @@
 package mutablealignment;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import beast.base.core.Description;
@@ -30,13 +31,7 @@ public class MATreeLikelihood extends TreeLikelihood {
 		
 		alignmentNeedsUpdate = false;
 	}
-	
-	@Override
-	protected void calcLogP() {
-		// TODO Auto-generated method stub
-		super.calcLogP();
-	}
-	
+		
 	@Override
 	public double calculateLogP() {
 		if (alignmentNeedsUpdate) {
@@ -44,6 +39,14 @@ public class MATreeLikelihood extends TreeLikelihood {
 			alignmentNeedsUpdate = false;
 		}
 		logP = super.calculateLogP();
+		
+		
+//		int [] states = new int[5];
+//		for (int i = 0; i < 5; i++) {
+//			likelihoodCore.getNodeStates(i, states);
+//			System.out.println(i + ": " + Arrays.toString(states));
+//		}
+		
 		return logP;
 	}
 	
@@ -189,6 +192,12 @@ public class MATreeLikelihood extends TreeLikelihood {
     	dirtySequences.clear();
 	}
 	
+	@Override
+	protected void accept() {
+    	dirtySequences.clear();
+		alignment.accept();
+		super.accept();
+	}
 
 	@Override
 	protected boolean requiresRecalculation() {
