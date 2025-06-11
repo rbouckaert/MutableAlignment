@@ -31,12 +31,12 @@ public class MutableAlignmentTest {
 	}
 	
 
-	static Sequence human = new Sequence("human",         "AGA");
-    static Sequence chimp = new Sequence("chimp",         "AGA");
-    static Sequence bonobo = new Sequence("bonobo",       "AGA");
-    static Sequence gorilla = new Sequence("gorilla",     "AGA");
-    static Sequence orangutan = new Sequence("orangutan", "AGA");
-    static Sequence siamang = new Sequence("siamang",     "TGA");
+	static Sequence human = new Sequence("0human",         "AGA");
+    static Sequence chimp = new Sequence("1chimp",         "AGA");
+    static Sequence bonobo = new Sequence("2bonobo",       "AGA");
+    static Sequence gorilla = new Sequence("3gorilla",     "AGA");
+    static Sequence orangutan = new Sequence("4orangutan", "AGA");
+    static Sequence siamang = new Sequence("5siamang",     "TGA");
 	
 	
     static public MutableAlignment getAlignment1() throws Exception {
@@ -45,33 +45,33 @@ public class MutableAlignmentTest {
     }
 
     static public MutableAlignment getAlignment2() throws Exception {
-        Sequence chimp = new Sequence("chimp",         "AAA"); // one char diff from Alignment1
+        Sequence chimp = new Sequence("1chimp",         "AAA"); // one char diff from Alignment1
         return getAlignment(human, chimp, bonobo, gorilla, orangutan, siamang);
     }
 	
     static public MutableAlignment getAlignment3() throws Exception {
-        Sequence chimp = new Sequence("chimp",         "AAA"); // one char diff from Alignment1
-        Sequence bonobo = new Sequence("bonobo",       "TGC"); // one sequence diff from Alignment1
+        Sequence chimp = new Sequence("1chimp",         "AAA"); // one char diff from Alignment1
+        Sequence bonobo = new Sequence("2bonobo",       "TGC"); // one sequence diff from Alignment1
         return getAlignment(human, chimp, bonobo, gorilla, orangutan, siamang);
     }
 
     static public MutableAlignment getAlignment4() throws Exception {
-        Sequence human = new Sequence("human",         "CGA");
-        Sequence chimp = new Sequence("chimp",         "CAA");
-        Sequence bonobo = new Sequence("bonobo",       "CGC");
-        Sequence gorilla = new Sequence("gorilla",     "CGA");
-        Sequence orangutan = new Sequence("orangutan", "CGA");
-        Sequence siamang = new Sequence("siamang",     "CGA");
+        Sequence human = new Sequence("0human",         "CGA");
+        Sequence chimp = new Sequence("1chimp",         "CAA");
+        Sequence bonobo = new Sequence("2bonobo",       "CGC");
+        Sequence gorilla = new Sequence("3gorilla",     "CGA");
+        Sequence orangutan = new Sequence("4orangutan", "CGA");
+        Sequence siamang = new Sequence("5siamang",     "CGA");
         return getAlignment(human, chimp, bonobo, gorilla, orangutan, siamang);
     }
 
     static public MutableAlignment getAlignment5() throws Exception {
-        Sequence human = new Sequence("human",         "GCG");
-        Sequence chimp = new Sequence("chimp",         "CGC");
-        Sequence bonobo = new Sequence("bonobo",       "GCG");
-        Sequence gorilla = new Sequence("gorilla",     "CGC");
-        Sequence orangutan = new Sequence("orangutan", "GCG");
-        Sequence siamang = new Sequence("siamang",     "CGC");
+        Sequence human = new Sequence("0human",         "GCG");
+        Sequence chimp = new Sequence("1chimp",         "CGC");
+        Sequence bonobo = new Sequence("2bonobo",       "GCG");
+        Sequence gorilla = new Sequence("3gorilla",     "CGC");
+        Sequence orangutan = new Sequence("4orangutan", "GCG");
+        Sequence siamang = new Sequence("5siamang",     "CGC");
         return getAlignment(human, chimp, bonobo, gorilla, orangutan, siamang);
     }
 

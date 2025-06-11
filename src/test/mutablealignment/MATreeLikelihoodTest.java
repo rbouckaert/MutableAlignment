@@ -11,6 +11,7 @@ import beast.base.evolution.sitemodel.SiteModel;
 import beast.base.evolution.substitutionmodel.Frequencies;
 import beast.base.evolution.substitutionmodel.HKY;
 import beast.base.evolution.tree.Tree;
+import beast.base.evolution.tree.TreeParser;
 import beast.base.inference.State;
 import mutablealignment.MATreeLikelihood;
 import mutablealignment.MutableAlignment;
@@ -31,8 +32,17 @@ public class MATreeLikelihoodTest {
         logP5 = calcLogP(MutableAlignmentTest.getAlignment5());        
 	}
 	
+    static public Tree getTree(Alignment data) throws Exception {
+        TreeParser tree = new TreeParser();
+        tree.initByName("taxa", data,
+                "newick", "((((0human:0.024003,(1chimp:0.010772,2bonobo:0.010772):0.013231):0.012035,3gorilla:0.036038):0.033087000000000005,4orangutan:0.069125):0.030456999999999998,5siamang:0.099582);",
+                "IsLabelledNewick", true);
+        tree.setID("Tree.t:tree");
+        return tree;
+    }
+
 	private double calcLogP(Alignment data) throws Exception {
-        tree = BEASTTestCase.getTree(data);
+        tree = getTree(data);
 
         Frequencies freqs = new Frequencies();
         freqs.initByName("frequencies", "0.1 0.2 0.3 0.4");
