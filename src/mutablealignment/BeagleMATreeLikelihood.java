@@ -142,13 +142,14 @@ public class BeagleMATreeLikelihood extends BeagleTreeLikelihood {
 	// propagate changes from a leaf node set by getLogProbsForStateSequence or 
 	// getLogProbsForPartialsSequence to the root and return updated pattern log 
 	// likelihoods
-	private double [] calcPatternLogLikelihoods(final int nodeNr) {
+	private double [] calcPatternLogLikelihoods(int nodeNr) {
 
         Node node = treeInput.get().getNode(nodeNr);
         int operationCount = 0;
         final int[] operations = new int[treeInput.get().getNodeCount() *  Beagle.OPERATION_TUPLE_SIZE];
         do {
         	node = node.getParent();
+        	nodeNr = node.getNr();
 
             // Traverse down the two child nodes
             Node child1 = node.getLeft();
@@ -266,13 +267,12 @@ public class BeagleMATreeLikelihood extends BeagleTreeLikelihood {
 
             logL = sumLogLikelihoods[0];
 
+            beagle.getSiteLogLikelihoods(patternLogLikelihoods);
             if (ascertainedSitePatterns) {
                 // Need to correct for ascertainedSitePatterns
-                beagle.getSiteLogLikelihoods(patternLogLikelihoods);
                 logL = getAscertainmentCorrectedLogLikelihood(alignment,
                         patternLogLikelihoods, alignment.getWeights(), frequencies);
             } else if (invariantCategory >= 0) {
-                beagle.getSiteLogLikelihoods(patternLogLikelihoods);
                 int [] patternWeights = alignment.getWeights();
                 proportionInvariant = m_siteModel.getProportionInvariant();
                 
@@ -322,7 +322,7 @@ public class BeagleMATreeLikelihood extends BeagleTreeLikelihood {
 
         } while (!done);
 
-        return patternLogLikelihoods;
+        return patternLogLikelihoods.clone();
     }
 
 	
