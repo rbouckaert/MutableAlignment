@@ -1151,7 +1151,7 @@ public class BeagleTreeLikelihood extends TreeLikelihood {
      * the BEAGLE library instance
      */
     protected Beagle beagle;
-    
+
     public Beagle getBeagle() {return beagle;}
 
     /**

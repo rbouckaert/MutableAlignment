@@ -16,20 +16,27 @@ public class MATreeLikelihood extends TreeLikelihood {
 	
 	private MutableAlignment alignment;
 	private boolean alignmentNeedsUpdate;
-	
+	private int[] cachedStates;
+	private double[] cachedPartials;
+
 	@Override
 	public void initAndValidate() {
 		if (!(dataInput.get() instanceof MutableAlignment)) {
 			throw new IllegalArgumentException("Expected MutableAlignment as data, not " + dataInput.get().getClass().getName());
 		}
 		alignment = (MutableAlignment) dataInput.get();
-		
+
 		boolean useJava = System.getProperty("java.only") == null ? false : Boolean.valueOf(System.getProperty("java.only"));
 		System.setProperty("java.only", "true");
 		super.initAndValidate();
 		System.setProperty("java.only", useJava + "");
-		
+
 		alignmentNeedsUpdate = false;
+
+		int patternCount = alignment.getPatternCount();
+		int stateCount = alignment.getDataType().getStateCount();
+		cachedStates = new int[patternCount];
+		cachedPartials = new double[patternCount * stateCount];
 	}
 		
 	@Override
@@ -70,38 +77,34 @@ public class MATreeLikelihood extends TreeLikelihood {
             int taxonIndex = alignment.getTaxonIndex(node.getID());
 
             if (m_useAmbiguities.get()) {
-	            double[] partials = new double[patternCount * stateCount];
-	            
 	            int k = 0;
-	            for (int patternIndex_ = 0; patternIndex_ < patternCount; patternIndex_++) {                
+	            for (int patternIndex_ = 0; patternIndex_ < patternCount; patternIndex_++) {
 	                double[] tipLikelihoods = alignment.getTipLikelihoods(taxonIndex, patternIndex_);
 	                if (tipLikelihoods != null) {
 	                	for (int state = 0; state < stateCount; state++) {
-	                		partials[k++] = tipLikelihoods[state];
+	                		cachedPartials[k++] = tipLikelihoods[state];
 	                	}
 	                } else {
 	                	int statex = alignment.getPattern(taxonIndex, patternIndex_);
 		                boolean[] stateSet = alignment.getStateSet(statex);
 		                for (int state = 0; state < stateCount; state++) {
-		                	 partials[k++] = (stateSet[state] ? 1.0 : 0.0);                
+		                	 cachedPartials[k++] = (stateSet[state] ? 1.0 : 0.0);
 		                }
 	                }
 	            }
-	            likelihoodCore.setNodePartials(nodeNr, partials);
+	            likelihoodCore.setNodePartials(nodeNr, cachedPartials);
 	            
             } else {
-            	
-                int[] states = new int[patternCount];
                 DataType dataType = alignment.getDataType();
                 for (int i = 0; i < patternCount; i++) {
                     int code = alignment.getPattern(taxonIndex, i);
                     int[] statesForCode = dataType.getStatesForCode(code);
                     if (statesForCode.length==1)
-                        states[i] = statesForCode[0];
+                        cachedStates[i] = statesForCode[0];
                     else
-                        states[i] = code; // Causes ambiguous states to be ignored.
+                        cachedStates[i] = code; // Causes ambiguous states to be ignored.
                 }
-                likelihoodCore.setNodeStates(nodeNr, states);
+                likelihoodCore.setNodeStates(nodeNr, cachedStates);
                 node.makeDirty(Tree.IS_DIRTY);
             }
         }
@@ -112,22 +115,21 @@ public class MATreeLikelihood extends TreeLikelihood {
 	 * to states encoded in sites
 	 */
 	public double [] getLogProbsForStateSequence(int nodeNr, int [] sites) {
-		// update data for node 
+		// update data for node
 		int patternCount = sites.length;
         if (m_useAmbiguities.get()) {
         	throw new IllegalArgumentException("should not use getLogProbsForSequence but getLogProbsForPartialsSequence instead");
         }
-        int[] states = new int[patternCount];
         DataType dataType = alignment.getDataType();
         for (int i = 0; i < patternCount; i++) {
             int code = sites[i];
             int[] statesForCode = dataType.getStatesForCode(code);
             if (statesForCode.length==1)
-                states[i] = statesForCode[0];
+                cachedStates[i] = statesForCode[0];
             else
-                states[i] = code; // Causes ambiguous states to be ignored.
+                cachedStates[i] = code; // Causes ambiguous states to be ignored.
         }
-        likelihoodCore.setNodeStates(nodeNr, states);
+        likelihoodCore.setNodeStates(nodeNr, cachedStates);
 
         return calcPatternLogLikelihoods(nodeNr);
 	}
