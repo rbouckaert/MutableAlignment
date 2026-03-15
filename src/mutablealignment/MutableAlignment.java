@@ -353,7 +353,7 @@ public class MutableAlignment extends Alignment implements MutableAlignmentInter
 	@Override
 	public void assignFromFragile(StateNode other) {
 		MutableAlignment src = (MutableAlignment)other;
-		if (src.getPatternCount() != src.getPatternCount()) {
+		if (this.getPatternCount() != src.getPatternCount()) {
 			throw new IllegalArgumentException("assignFromFragile() Expected replacement to be of equal number of patterns (this is realy fragile)");
 		}
 		for (int i = 0; i < src.getPatternCount(); i++) {
