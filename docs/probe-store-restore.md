@@ -42,20 +42,21 @@ In one MCMC iteration, the framework calls (in order):
 4. `posterior.calculateLogP()` → `MATreeLikelihood.calculateLogP()`
 5. accept → `acceptCalculationNodes()`, or reject → `state.restore()` + `restoreCalculationNodes()`
 
-Step 3 is the trap of an earlier design (see history below). Anything
-`store()` clears is wiped *between probes and calculateLogP* — so any
-probe-tracking state set up during step 2 must either (a) survive `store()`
-or (b) be eliminated entirely before `store()` is called. The current code
-takes path (b) for partials.
+Step 3 sits between probes (step 2) and evaluation (step 4). Any
+probe-tracking state that needs to survive into `calculateLogP()` must
+either (a) survive `store()` unchanged, or (b) not exist at all by the
+time `store()` runs. The design below takes path (b) for partials and
+path (a) for the tip-state tracking that `BeerLikelihoodCore`'s
+single-buffered tip layout forces on us.
 
-## Current design (commit `66e8b99` and later): hermetic probes
+## Hermetic probes
 
-`calcPatternLogLikelihoods` is now hermetic: it flips each touched
-ancestor's partials index to the scratch slot before writing, computes
-pattern log likelihoods at the root, then flips each ancestor back. After
-the probe call returns, the partials indices are exactly what they were
-on entry — the probe leaves *no trace* in the `LikelihoodCore`'s buffer
-indices for the framework's store/restore to mishandle.
+`calcPatternLogLikelihoods` is hermetic: it flips each touched ancestor's
+partials index to the scratch slot before writing, computes pattern log
+likelihoods at the root, then flips each ancestor back. After the probe
+call returns, the partials indices are exactly what they were on entry —
+the probe leaves *no trace* in the `LikelihoodCore`'s buffer indices for
+the framework's store/restore to mishandle.
 
 ```mermaid
 sequenceDiagram
@@ -92,51 +93,6 @@ sequenceDiagram
 For tip states, `tempTipNodes` is still needed and `store()` must not
 clear it — that is the one cross-method invariant left.
 
-## Earlier design (commits `0a33bb7`/`c99c8f8`/`af09f09`)
-
-Earlier versions tracked flipped ancestors in a class-level
-`flippedNodes` Set and undid the flips in an explicit loop at the start
-of `calculateLogP()`. That worked in principle, but commits `0a33bb7` and
-`c99c8f8` cleared `flippedNodes` inside `store()` — wiping the tracking
-between probes and the undo loop. The framework's traverse then flipped
-`c` a *second* time, rotating it back onto the stored slot and
-overwriting the genuine pre-store partials. The bug surfaced as a
-likelihood mismatch in `phylonco`'s `ExchangeGibbsOperator` (cached
-−541.026 vs fresh −570.892, Δ 29.87).
-
-```mermaid
-sequenceDiagram
-    participant MCMC
-    participant Op as Operator
-    participant MA as MATreeLikelihood
-    participant LC as likelihoodCore
-
-    Note over LC: partials[0]=A (current), partials[1]=junk<br/>c=0, s=0
-
-    MCMC->>Op: proposal()
-    Op->>MA: getLogProbsForStateSequence(...)
-    MA->>LC: setNodePartialsForUpdate(a) [c: 0→1]
-    Note right of MA: flippedNodes += a
-    MA->>LC: calculatePartials → writes partials[1][a]
-    Note over LC: partials[0]=A, partials[1]=probe<br/>c=1, s=0
-
-    rect rgb(255, 200, 200)
-    MCMC->>MA: store clears flippedNodes (BUG)
-    end
-
-    MCMC->>MA: calculateLogP()
-    Note right of MA: undo loop is empty -- c stays at 1
-    MA->>LC: super.calculateLogP → traverse flips c again [c: 1→0]<br/>writes new state B into partials[0]
-    Note over LC: partials[0]=B (overwrote A!), partials[1]=probe<br/>c=0, s=0
-
-    MCMC->>LC: restore swaps c and s
-    Note over LC: partials[0] holds the corrupt value B instead of A
-```
-
-`af09f09` patched the immediate symptom by removing the two `clear()`
-calls in `store()`. `66e8b99` then refactored to the hermetic design
-above, eliminating the cross-method partials state altogether.
-
 ## Why this is the cleanest available design
 
 - **Tip states must use `tempTipNodes`.** `setNodeStatesForUpdate` is a
@@ -147,8 +103,7 @@ above, eliminating the cross-method partials state altogether.
 - **Partials don't need cross-method state.** The "flip up, compute,
   flip back" pattern is local to `calcPatternLogLikelihoods` and leaves
   no cross-method invariants (other than the one tip-state set we already
-  need). No `store()`/`accept()`/`restore()` machinery to keep in sync;
-  no don't-clear-in-store trap to remember.
+  need). No `store()`/`accept()`/`restore()` machinery to keep in sync.
 - **BEAGLE's rescale recursion is handled** by threading the per-call
   `flipped` set through the recursive call, so each ancestor is still
   flipped at most once across rescale attempts and flipped back exactly
@@ -163,11 +118,11 @@ MCMC's failure path calls `state.restore()` but skips
 never runs, so `tempTipNodes` is not cleared and the tip states are not
 resynced.
 
-For partials this is now harmless — the hermetic flip-up/flip-back
-already happened inside the probe call, so the buffer indices are clean.
-For tip states, the next probe in the next iteration would write fresh
-states (overwriting the stale ones) before computing, so single-probe
-operators still get the right answer. Cross-iteration state leakage of
+For partials this is harmless — the hermetic flip-up/flip-back already
+happened inside the probe call, so the buffer indices are clean. For tip
+states, the next probe in the next iteration would write fresh states
+(overwriting the stale ones) before computing, so single-probe operators
+still get the right answer. Cross-iteration state leakage of
 `tempTipNodes` is a small leak, not a correctness bug.
 
 This isn't triggered by `phylonco`'s `ExchangeGibbsOperator` (all its
