@@ -77,14 +77,6 @@ public class BeagleMATreeLikelihood extends BeagleTreeLikelihood {
 			alignmentNeedsUpdate = false;
 		}
 		logP = super.calculateLogP();
-		
-		
-//		int [] states = new int[5];
-//		for (int i = 0; i < 5; i++) {
-//			likelihoodCore.getNodeStates(i, states);
-//			System.out.println(i + ": " + Arrays.toString(states));
-//		}
-		
 		return logP;
 	}
 	
@@ -179,12 +171,10 @@ public class BeagleMATreeLikelihood extends BeagleTreeLikelihood {
 	}
 
 	
-	// propagate changes from a leaf node set by getLogProbsForStateSequence or
-	// getLogProbsForPartialsSequence to the root and return updated pattern log
-	// likelihoods. Hermetic: flips each touched ancestor's partials offset to
-	// the scratch slot before writing, computes pattern log likelihoods at the
-	// root, then flips each ancestor back. After this method returns the
-	// partialBufferHelper offsets are exactly what they were on entry.
+	// Hermetic probe: flips each touched ancestor's partials offset to the
+	// scratch slot before writing, then flips back on exit so the
+	// partialBufferHelper offsets are unchanged on return.
+	// See docs/probe-store-restore.md.
 	private double [] calcPatternLogLikelihoods(int nodeNr) {
 		return calcPatternLogLikelihoods(nodeNr, new HashSet<>());
 	}
@@ -365,9 +355,6 @@ public class BeagleMATreeLikelihood extends BeagleTreeLikelihood {
                     // Pass `flipped` so the recursion's add() check skips
                     // re-flipping the ancestors we already toggled.
                     return calcPatternLogLikelihoods(nodeNr, flipped);
-
-//                    done = false; // Run through do-while loop again
-//                    firstRescaleAttempt = false; // Only try to rescale once
                 } else {
                     // we have already tried a rescale, not rescaling or always rescaling
                     // so just return the likelihood...

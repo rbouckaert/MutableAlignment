@@ -1,7 +1,6 @@
 package mutablealignment;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -80,14 +79,6 @@ public class MATreeLikelihood extends TreeLikelihood {
 			alignmentNeedsUpdate = false;
 		}
 		logP = super.calculateLogP();
-		
-		
-//		int [] states = new int[5];
-//		for (int i = 0; i < 5; i++) {
-//			likelihoodCore.getNodeStates(i, states);
-//			System.out.println(i + ": " + Arrays.toString(states));
-//		}
-		
 		return logP;
 	}
 	
@@ -182,13 +173,9 @@ public class MATreeLikelihood extends TreeLikelihood {
 	}
 
 	
-	// propagate changes from a leaf node set by getLogProbsForStateSequence or
-	// getLogProbsForPartialsSequence to the root and return updated pattern log
-	// likelihoods. Hermetic: flips each touched ancestor's partials index to
-	// the scratch slot before writing, computes pattern log likelihoods at the
-	// root, then flips each ancestor back. After this method returns the
-	// likelihoodCore's partials indices are exactly what they were on entry,
-	// so the probe leaves no trace for the framework's store/restore to mishandle.
+	// Hermetic probe: flips each touched ancestor's partials index to the
+	// scratch slot before writing, then flips back on exit so the partials
+	// indices are unchanged on return. See docs/probe-store-restore.md.
 	private double [] calcPatternLogLikelihoods(int nodeNr) {
         // calculate partials up to the root, flipping each ancestor to its
         // scratch slot so we don't overwrite the stored state
