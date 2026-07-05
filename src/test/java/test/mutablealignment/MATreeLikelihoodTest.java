@@ -2,14 +2,19 @@ package test.mutablealignment;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.inference.parameter.RealScalarParam;
+import beast.base.spec.inference.parameter.SimplexParam;
+import beast.base.spec.type.RealScalar;
+import beast.base.spec.type.Simplex;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import beast.base.evolution.alignment.Alignment;
 import beast.base.evolution.likelihood.TreeLikelihood;
-import beast.base.evolution.sitemodel.SiteModel;
-import beast.base.evolution.substitutionmodel.Frequencies;
-import beast.base.evolution.substitutionmodel.HKY;
+import beast.base.spec.evolution.sitemodel.SiteModel;
+import beast.base.spec.evolution.substitutionmodel.Frequencies;
+import beast.base.spec.evolution.substitutionmodel.HKY;
 import beast.base.evolution.tree.Tree;
 import beast.base.evolution.tree.TreeParser;
 import beast.base.inference.State;
@@ -21,8 +26,8 @@ public class MATreeLikelihoodTest {
 	private double logP1, logP2, logP3, logP4, logP5;
 	private Tree tree;
 	private SiteModel siteModel;
-	
-	@BeforeEach
+
+    @BeforeEach
 	public void SetUp() throws Exception {
         logP1 = calcLogP(MutableAlignmentTest.getAlignment1());
         logP2 = calcLogP(MutableAlignmentTest.getAlignment2());
@@ -43,14 +48,21 @@ public class MATreeLikelihoodTest {
 	private double calcLogP(Alignment data) throws Exception {
         tree = getTree(data);
 
+        // mutation rate
+        RealScalar<PositiveReal> mu = new RealScalarParam<>(1.0, PositiveReal.INSTANCE);
+
+        double[] freqsValue = {0.1, 0.2, 0.3, 0.4};
+        Simplex f = new SimplexParam(freqsValue);
         Frequencies freqs = new Frequencies();
-        freqs.initByName("frequencies", "0.1 0.2 0.3 0.4");
+        freqs.initByName("frequencies", f, "estimate", false);
 
         HKY hky = new HKY();
         hky.initByName("kappa", "20", "frequencies", freqs);
 
         siteModel = new SiteModel();
-        siteModel.initByName("mutationRate", "1.0", "gammaCategoryCount", 1, "substModel", hky);
+        siteModel.initByName("mutationRate", mu,
+                "gammaCategoryCount", 1,
+                "substModel", hky);
 
         TreeLikelihood likelihood = new TreeLikelihood();
         likelihood.initByName("data", data, "tree", tree, "siteModel", siteModel);
